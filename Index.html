@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scanner DO</title>
+  <meta name="theme-color" content="#0f766e">
+  <style>
+    :root {
+      --p900: #064e4b; --p700: #0f766e; --p500: #14b8a6; --p200: #99f6e4; --p100: #ccfbf1; --p50: #f0fdfa;
+      --latar: #f4faf9; --teks: #10201f; --abu: #5f7573; --garis: #d5e6e3;
+      --hijau: #16a34a; --kuning: #b45309; --kuning-bg: #fef3c7; --merah: #e11d48; --merah-bg: #ffe4e6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--teks);
+      background: radial-gradient(circle at 100% 0, #d3f5ee 0, transparent 45%), var(--latar); }
+    button { font: inherit; }
+    button:focus-visible { outline: 3px solid var(--p500); outline-offset: 2px; }
+
+    header { padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 76px; color: #fff; border-radius: 0 0 32px 32px;
+      background: linear-gradient(135deg, var(--p700), var(--p500)); }
+    .brand { display: flex; align-items: center; gap: 14px; max-width: 480px; margin: 0 auto; }
+    .logo { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: rgba(255, 255, 255, .2); }
+    h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.2px; }
+    header p { margin: 2px 0 0; font-size: 14px; opacity: .9; }
+    main { max-width: 480px; margin: -52px auto 0; padding: 0 14px 32px; }
+    .kartu { margin-bottom: 14px; padding: 14px; background: #fff; border-radius: 20px; box-shadow: 0 8px 24px rgba(6, 78, 75, .10); }
+
+    /* Kamera */
+    #kamera { position: relative; height: 150px; overflow: hidden; background: #062b2a; border-radius: 16px; cursor: pointer; }
+    #reader, #reader__scan_region { width: 100%; height: 100% !important; min-height: 0 !important; }
+    #reader video { display: block; width: 100% !important; height: 100% !important; object-fit: cover; }
+    #reader #qr-shaded-region { border-color: rgba(6, 43, 42, .5) !important; }
+    #reader #qr-shaded-region div { background-color: #5eead4 !important; }
+    #pesanKamera { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 14px; overflow: auto; text-align: center; font-size: 13px; line-height: 1.45; color: #b6efe6; }
+    #pesanKamera[hidden] { display: none; }
+    .garis { position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; opacity: 0; pointer-events: none;
+      background: linear-gradient(90deg, transparent, #5eead4, transparent); box-shadow: 0 0 12px #5eead4; }
+    #kamera.kedip { box-shadow: inset 0 0 0 4px #5eead4; }
+    #kamera.aktif .garis { opacity: 1; animation: sapu 2.2s ease-in-out infinite alternate; }
+    @keyframes sapu { from { top: 22%; } to { top: 78%; } }
+    @media (prefers-reduced-motion: reduce) { #kamera.aktif .garis { animation: none; } }
+
+    .baris { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; min-height: 30px; }
+    .chip { padding: 5px 12px; font-size: 13px; font-weight: 600; border-radius: 999px; }
+    #jumlah { color: var(--p700); background: var(--p100); }
+    #antrean { color: var(--kuning); background: var(--kuning-bg); }
+    #antrean[hidden], #btnFoto[hidden] { display: none; }
+    #btnFoto { margin-left: auto; padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--p700); background: #fff; border: 1.5px solid var(--p500); border-radius: 999px; }
+    #pesan { min-height: 20px; margin: 8px 0 0; font-size: 14px; text-align: center; }
+    #pesan.err { color: var(--merah); }
+    #pesan.ok { color: var(--hijau); }
+
+    /* Input manual */
+    .manual { display: flex; gap: 8px; }
+    .manual input { flex: 1; min-width: 0; padding: 13px 16px; font-size: 16px; color: var(--teks); background: var(--p50); border: 1.5px solid var(--garis); border-radius: 14px; }
+    .manual input:focus { outline: none; background: #fff; border-color: var(--p500); box-shadow: 0 0 0 3px rgba(20, 184, 166, .25); }
+    .manual button { padding: 0 20px; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); border: 0; border-radius: 14px; }
+
+    /* Daftar hasil */
+    h2 { margin: 0 0 6px; font-size: 15px; color: var(--p900); }
+    #kosong { margin: 0; font-size: 14px; color: var(--abu); }
+    #daftar { margin: 0; padding: 0; list-style: none; }
+    #daftar li { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-top: 8px; padding: 11px 12px; background: var(--p50); border-left: 4px solid var(--garis); border-radius: 12px; }
+    #daftar li.ok { border-left-color: var(--hijau); }
+    #daftar li.sudah { border-left-color: #f59e0b; }
+    #daftar li.tidak, #daftar li.gagal { border-left-color: var(--merah); }
+    #daftar li.proses, #daftar li.antre { border-left-color: var(--p500); }
+    .kode { font-weight: 600; letter-spacing: .3px; word-break: break-all; }
+    .ket { margin-top: 2px; font-size: 13px; color: var(--abu); }
+    .lencana { flex: none; padding: 3px 10px; font-size: 12px; font-weight: 700; border-radius: 999px; }
+    .lencana.ok { color: #166534; background: #dcfce7; }
+    .lencana.sudah { color: var(--kuning); background: var(--kuning-bg); }
+    .lencana.tidak, .lencana.gagal { color: #9f1239; background: var(--merah-bg); }
+    .lencana.proses, .lencana.antre { color: var(--p700); background: var(--p100); }
+
+    /* Pop-up izin kamera */
+    .modal { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(6, 43, 42, .6); }
+    .modal[hidden] { display: none; }
+    .kotak { width: 100%; max-width: 420px; padding: 22px; background: #fff; border-radius: 22px; }
+    .kotak h3 { margin: 0 0 8px; font-size: 19px; color: var(--p900); }
+    .kotak p { margin: 0 0 14px; font-size: 15px; line-height: 1.5; }
+    .kotak button { display: block; width: 100%; margin-top: 8px; padding: 13px; font-size: 16px; font-weight: 600; border-radius: 14px; border: 1.5px solid transparent; }
+    #mIzin { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); }
+    #mFoto { color: var(--p700); background: #fff; border-color: var(--p500); }
+    #mTutup { color: var(--abu); background: transparent; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 9v6M12 9v6M16 9v6"/></svg>
+    </div>
+    <div>
+      <h1>Scanner DO</h1>
+      <p>Scan barcode nomor DO, penerimaan tercatat otomatis.</p>
+    </div>
+  </div>
+</header>
+<main>
+  <section class="kartu">
+    <div id="kamera">
+      <div id="reader"></div>
+      <div id="pesanKamera">Ketuk di sini untuk mengaktifkan kamera</div>
+      <div class="garis"></div>
+    </div>
+    <div class="baris">
+      <span class="chip" id="jumlah">0 discan</span>
+      <span class="chip" id="antrean" hidden></span>
+      <button type="button" id="btnFoto" hidden>Foto barcode</button>
+      <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
+    </div>
+    <p id="pesan" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="kartu">
+    <form class="manual" id="formManual" autocomplete="off">
+      <input type="text" id="manual" placeholder="Ketik nomor DO jika barcode tidak terbaca" aria-label="Nomor DO">
+      <button type="submit">Proses</button>
+    </form>
+  </section>
+
+  <section class="kartu">
+    <h2>Hasil scan</h2>
+    <p id="kosong">Belum ada nomor yang discan.</p>
+    <ul id="daftar"></ul>
+  </section>
+</main>
+
+<div id="modalKamera" class="modal" role="dialog" aria-modal="true" aria-labelledby="mJudul" hidden>
+  <div class="kotak">
+    <h3 id="mJudul">Izinkan akses kamera</h3>
+    <p id="mTeks">Kamera dipakai untuk memindai barcode. Tekan Izinkan kamera, lalu pilih Izinkan pada pop-up browser.</p>
+    <button type="button" id="mIzin">Izinkan kamera</button>
+    <button type="button" id="mFoto">Pakai foto barcode</button>
+    <button type="button" id="mTutup">Ketik manual saja</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  // Ganti dengan URL Web App Apps Script (berakhiran /exec)
+  const API_URL = 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT';
+
+  const $ = (id) => document.getElementById(id);
+  let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, status, ket}
+  let scanner = null, scannerJalan = false;
+  let kodeTerakhir = '', waktuTerakhir = 0;
+
+  // ---- Penyimpanan lokal, PIN, dan nama petugas ----
+  const simpanLokal = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const bacaLokal = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+
+  function ambilKredensial() {
+    let nama = bacaLokal('nama');
+    if (!nama) { nama = (prompt('Masukkan nama Anda') || '').trim(); simpanLokal('nama', nama); }
+    return { pin: bacaLokal('pin'), nama };
+  }
+
+  async function api(action, data) {
+    const k = ambilKredensial();
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 20000);
+    try {
+      // Tanpa header khusus agar browser tidak mengirim preflight (CORS) ke Apps Script
+      const res = await fetch(API_URL, { method: 'POST', signal: ctl.signal,
+        body: JSON.stringify(Object.assign({ action: action, pin: k.pin, user: k.nama }, data)) });
+      const json = await res.json();
+      if (json && json.code === 'PIN') { try { localStorage.removeItem('pin'); } catch (e) {} }
+      return json;
+    } finally { clearTimeout(timer); }
+  }
+
+  // Meminta PIN lalu memeriksanya ke server; PIN yang salah tidak disimpan dan ditanyakan lagi
+  async function pastikanPin() {
+    for (let i = 0; i < 3; i++) {
+      if (!bacaLokal('pin')) {
+        const p = (prompt(i ? 'PIN salah. Coba lagi:' : 'Masukkan PIN akses') || '').trim();
+        if (!p) return false;
+        simpanLokal('pin', p);
+      }
+      try {
+        const res = await api('ping', {});
+        if (!res || res.code !== 'PIN') return true;
+      } catch (e) { return true; }                 // offline: diperiksa saat data dikirim
+    }
+    return false;
+  }
+
+  // ---- Tampilan ----
+  function pesan(teks, jenis) { $('pesan').textContent = teks || ''; $('pesan').className = jenis || ''; }
+
+  const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
+  function render() {
+    $('kosong').hidden = daftar.length > 0;
+    $('jumlah').textContent = daftar.length + ' discan';
+    $('daftar').replaceChildren(...daftar.map((d) => {
+      const li = document.createElement('li');
+      li.className = d.status;
+      const kiri = document.createElement('div');
+      const kode = document.createElement('div'); kode.className = 'kode'; kode.textContent = d.kode;
+      kiri.append(kode);
+      if (d.ket) { const k = document.createElement('div'); k.className = 'ket'; k.textContent = d.ket; kiri.append(k); }
+      const l = document.createElement('span'); l.className = 'lencana ' + d.status; l.textContent = LABEL[d.status];
+      li.append(kiri, l);
+      return li;
+    }));
+  }
+
+  // Menerjemahkan hasil dari server ke tampilan
+  function terapkan(item, h) {
+    if (!h) { item.status = 'gagal'; item.ket = 'Tidak ada jawaban dari server.'; return; }
+    item.status = h.status;
+    item.ket = h.status === 'ok' ? (h.baris > 1 ? h.baris + ' baris diperbarui' : 'Tanggal penerimaan tercatat')
+      : h.status === 'sudah' ? 'Oleh ' + h.user + ', ' + h.waktu
+      : 'Nomor ini tidak ada di kolom NO DOCUMENT';
+  }
+
+  // ---- Pengiriman dan antrean offline ----
+  let antrean = (() => { try { return JSON.parse(localStorage.getItem('antrean_do') || '[]'); } catch (e) { return []; } })();
+  function simpanAntrean() {
+    simpanLokal('antrean_do', JSON.stringify(antrean));
+    $('antrean').hidden = !antrean.length;
+    $('antrean').textContent = antrean.length + ' menunggu kirim';
+  }
+
+  let sedangBilas = false, timerUlang = null;
+
+  function tandaiAntre(paket, ket) {
+    paket.forEach((p) => {
+      const d = daftar.find((x) => x.kode.toUpperCase() === p.kode.toUpperCase());
+      if (d && d.status === 'proses') { d.status = 'antre'; d.ket = ket; }
+    });
+    render();
+  }
+  function jadwalUlang() {
+    if (!timerUlang) timerUlang = setTimeout(() => { timerUlang = null; bilasAntrean(); }, 8000);
+  }
+
+  // Semua scan masuk antrean. Hanya satu pengiriman berjalan sekaligus, dan setiap pengiriman
+  // membawa semua scan yang menumpuk, jadi scan berikutnya tidak perlu menunggu hasil sebelumnya.
+  async function bilasAntrean() {
+    if (sedangBilas) return;
+    sedangBilas = true;
+    while (antrean.length) {
+      const paket = antrean.slice(0, 25);
+      try {
+        let res = await api('terima', { items: paket });
+        if (res && res.code === 'PIN') {
+          if (!(await pastikanPin())) { tandaiAntre(paket, 'PIN belum benar. Muat ulang halaman.'); break; }
+          res = await api('terima', { items: paket });
+        }
+        if (!res || !res.ok) {
+          tandaiAntre(paket, (res && res.message) || 'Gagal memproses, dicoba lagi otomatis.');
+          jadwalUlang();
+          break;
+        }
+        antrean = antrean.slice(paket.length);
+        simpanAntrean();
+        res.hasil.forEach((h) => {
+          let item = daftar.find((d) => d.kode.toUpperCase() === h.kode.toUpperCase());
+          if (!item) { item = { kode: h.kode }; daftar.unshift(item); }
+          terapkan(item, h);
+        });
+        render();
+      } catch (e) {
+        tandaiAntre(paket, 'Tidak ada sinyal. Dikirim otomatis nanti.');
+        jadwalUlang();
+        break;
+      }
+    }
+    sedangBilas = false;
+  }
+
+  // Bunyi pendek dan kedipan bingkai kamera: tanda scan masuk, langsung arahkan ke barcode berikutnya
+  let audio = null;
+  function tandaScan() {
+    if (navigator.vibrate) navigator.vibrate(80);
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = 880; g.gain.value = 0.08;
+      o.connect(g); g.connect(audio.destination);
+      o.start(); o.stop(audio.currentTime + 0.08);
+    } catch (e) {}
+    $('kamera').classList.add('kedip');
+    setTimeout(() => $('kamera').classList.remove('kedip'), 250);
+  }
+
+  // ---- Memproses nomor DO ----
+  function proses(teks) {
+    const kode = String(teks).trim();
+    if (!kode) return;
+    const sekarang = Date.now();
+    if (kode === kodeTerakhir && sekarang - waktuTerakhir < 3000) return;   // barcode yang sama masih di depan kamera
+    kodeTerakhir = kode; waktuTerakhir = sekarang;
+
+    if (daftar.some((d) => d.kode.toUpperCase() === kode.toUpperCase())) return pesan(kode + ' sudah discan pada sesi ini.', 'err');
+    tandaScan();
+    pesan('');
+    daftar.unshift({ kode: kode, status: 'proses', ket: '' });
+    render();
+    antrean.push({ kode: kode, waktu: sekarang });
+    simpanAntrean();
+    bilasAntrean();
+  }
+
+  $('formManual').addEventListener('submit', (e) => {
+    e.preventDefault();
+    proses($('manual').value);
+    $('manual').value = '';
+  });
+
+  // ---- Kamera ----
+  function buatScanner() {
+    if (scanner) return scanner;
+    const F = Html5QrcodeSupportedFormats;
+    scanner = new Html5Qrcode('reader', {
+      formatsToSupport: [F.CODE_128, F.CODE_39, F.CODE_93, F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.ITF, F.CODABAR],
+      useBarCodeDetectorIfSupported: true, verbose: false });
+    return scanner;
+  }
+
+  function mulaiScanner() {
+    if (!window.Html5Qrcode) { $('pesanKamera').textContent = 'Library scanner gagal dimuat. Periksa koneksi internet.'; return; }
+    buatScanner().start({ facingMode: 'environment' },
+      { fps: 15, qrbox: (w, h) => ({ width: Math.floor(w * 0.92), height: Math.max(60, Math.floor(h * 0.8)) }) },
+      proses, () => {})
+      .then(() => { scannerJalan = true; $('pesanKamera').hidden = true; $('kamera').classList.add('aktif'); })
+      .catch((err) => {
+        $('pesanKamera').textContent = 'Kamera langsung tidak bisa diakses (' + String(err) + '). Gunakan Foto barcode atau ketik nomor.';
+        $('btnFoto').hidden = false;
+        bukaModal(pesanError(err));
+      });
+  }
+
+  const bukaModal = (teks) => { if (teks) $('mTeks').textContent = teks; $('modalKamera').hidden = false; $('mIzin').focus(); };
+  const tutupModal = () => { $('modalKamera').hidden = true; };
+
+  function pesanError(err) {
+    const s = ((err && err.name) || '') + ' ' + String(err && err.message ? err.message : err);
+    const kode = (err && err.name) || String(err);
+    if (/NotAllowed|Permission/i.test(s)) return 'Izin kamera ditolak atau diblokir (' + kode + '). Ketuk ikon di kiri alamat URL > Izin > Kamera > Izinkan, muat ulang halaman, lalu coba lagi. Jika tidak ada pilihan izin, gunakan Pakai foto barcode.';
+    if (/NotFound|Requested device not found/i.test(s)) return 'Kamera tidak ditemukan di perangkat ini (' + kode + ').';
+    if (/NotReadable|TrackStart/i.test(s)) return 'Kamera sedang dipakai aplikasi lain (' + kode + '). Tutup aplikasi itu lalu coba lagi.';
+    return 'Kamera gagal dibuka (' + kode + '). Gunakan Pakai foto barcode atau ketik nomor manual.';
+  }
+
+  $('mIzin').addEventListener('click', async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      bukaModal('Browser ini tidak mengizinkan akses kamera langsung. Gunakan Pakai foto barcode.');
+      $('btnFoto').hidden = false;
+      return;
+    }
+    try {
+      // Dipanggil dari ketukan tombol, sehingga browser boleh menampilkan pop-up izin
+      (await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })).getTracks().forEach((t) => t.stop());
+      tutupModal();
+      mulaiScanner();
+    } catch (err) { $('btnFoto').hidden = false; bukaModal(pesanError(err)); }
+  });
+  $('mFoto').addEventListener('click', () => { tutupModal(); $('btnFoto').hidden = false; $('fileFoto').click(); });
+  $('mTutup').addEventListener('click', () => { tutupModal(); $('btnFoto').hidden = false; });
+  $('kamera').addEventListener('click', () => { if (!scannerJalan) bukaModal(); });
+
+  // Cadangan: foto barcode lewat aplikasi kamera bawaan HP
+  $('btnFoto').addEventListener('click', () => $('fileFoto').click());
+  $('fileFoto').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file || !window.Html5Qrcode) return;
+    pesan('Membaca foto...');
+    buatScanner().scanFile(file, false)
+      .then((teks) => { kodeTerakhir = ''; proses(teks); })
+      .catch(() => pesan('Barcode tidak terbaca. Foto lebih dekat, tegak lurus, dan pastikan barcode utuh serta fokus.', 'err'));
+  });
+
+  // ---- Mulai ----
+  window.addEventListener('load', () => {
+    render();
+    simpanAntrean();
+    bukaModal();
+    pastikanPin().then((ok) => { if (ok) bilasAntrean(); else pesan('PIN belum benar. Muat ulang halaman untuk mencoba lagi.', 'err'); });
+  });
+  window.addEventListener('online', bilasAntrean);
+</script>
+</body>
+</html>
