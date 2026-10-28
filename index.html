@@ -148,44 +148,30 @@
   let scanner = null, scannerJalan = false;
   let kodeTerakhir = '', waktuTerakhir = 0;
 
-  // ---- Penyimpanan lokal, PIN, dan nama petugas ----
+  // ---- Penyimpanan lokal dan nama petugas ----
   const simpanLokal = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
   const bacaLokal = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
 
-  function ambilKredensial() {
-    let nama = bacaLokal('nama');
-    if (!nama) { nama = (prompt('Masukkan nama Anda') || '').trim(); simpanLokal('nama', nama); }
-    return { pin: bacaLokal('pin'), nama };
+  // Nama petugas ditanyakan sekali, lalu diingat di browser ini (dicatat di kolom User)
+  let namaCache = bacaLokal('nama');
+  function ambilNama() {
+    if (!namaCache) {
+      namaCache = (prompt('Masukkan nama Anda') || '').trim() || '-';
+      simpanLokal('nama', namaCache === '-' ? '' : namaCache);
+    }
+    return namaCache;
   }
 
   async function api(action, data) {
-    const k = ambilKredensial();
+    const user = ambilNama();
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 20000);
     try {
       // Tanpa header khusus agar browser tidak mengirim preflight (CORS) ke Apps Script
       const res = await fetch(API_URL, { method: 'POST', signal: ctl.signal,
-        body: JSON.stringify(Object.assign({ action: action, pin: k.pin, user: k.nama }, data)) });
-      const json = await res.json();
-      if (json && json.code === 'PIN') { try { localStorage.removeItem('pin'); } catch (e) {} }
-      return json;
+        body: JSON.stringify(Object.assign({ action: action, user: user }, data)) });
+      return await res.json();
     } finally { clearTimeout(timer); }
-  }
-
-  // Meminta PIN lalu memeriksanya ke server; PIN yang salah tidak disimpan dan ditanyakan lagi
-  async function pastikanPin() {
-    for (let i = 0; i < 3; i++) {
-      if (!bacaLokal('pin')) {
-        const p = (prompt(i ? 'PIN salah. Coba lagi:' : 'Masukkan PIN akses') || '').trim();
-        if (!p) return false;
-        simpanLokal('pin', p);
-      }
-      try {
-        const res = await api('ping', {});
-        if (!res || res.code !== 'PIN') return true;
-      } catch (e) { return true; }                 // offline: diperiksa saat data dikirim
-    }
-    return false;
   }
 
   // ---- Tampilan ----
@@ -246,11 +232,7 @@
     while (antrean.length) {
       const paket = antrean.slice(0, 25);
       try {
-        let res = await api('terima', { items: paket });
-        if (res && res.code === 'PIN') {
-          if (!(await pastikanPin())) { tandaiAntre(paket, 'PIN belum benar. Muat ulang halaman.'); break; }
-          res = await api('terima', { items: paket });
-        }
+        const res = await api('terima', { items: paket });
         if (!res || !res.ok) {
           tandaiAntre(paket, (res && res.message) || 'Gagal memproses, dicoba lagi otomatis.');
           jadwalUlang();
@@ -382,7 +364,8 @@
     render();
     simpanAntrean();
     bukaModal();
-    pastikanPin().then((ok) => { if (ok) bilasAntrean(); else pesan('PIN belum benar. Muat ulang halaman untuk mencoba lagi.', 'err'); });
+    ambilNama();
+    bilasAntrean();
   });
   window.addEventListener('online', bilasAntrean);
 </script>
