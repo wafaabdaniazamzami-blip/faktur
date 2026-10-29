@@ -28,6 +28,7 @@
 
     /* Kamera */
     #kamera { position: relative; height: 150px; overflow: hidden; background: #062b2a; border-radius: 16px; cursor: pointer; }
+    #kamera[hidden] { display: none; }
     #reader, #reader__scan_region { width: 100%; height: 100% !important; min-height: 0 !important; }
     #reader video { display: block; width: 100% !important; height: 100% !important; object-fit: cover; }
     #reader #qr-shaded-region { border-color: rgba(6, 43, 42, .5) !important; }
@@ -36,17 +37,24 @@
     #pesanKamera[hidden] { display: none; }
     .garis { position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; opacity: 0; pointer-events: none;
       background: linear-gradient(90deg, transparent, #5eead4, transparent); box-shadow: 0 0 12px #5eead4; }
-    #kamera.kedip { box-shadow: inset 0 0 0 4px #5eead4; }
+    #kamera.kedip, #panelAlat.kedip { box-shadow: inset 0 0 0 4px #5eead4; }
     #kamera.aktif .garis { opacity: 1; animation: sapu 2.2s ease-in-out infinite alternate; }
     @keyframes sapu { from { top: 22%; } to { top: 78%; } }
     @media (prefers-reduced-motion: reduce) { #kamera.aktif .garis { animation: none; } }
+
+    /* Panel alat scanner USB */
+    .alat { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 26px 16px; text-align: center; background: var(--p50); border: 2px dashed var(--p500); border-radius: 16px; }
+    .alat[hidden] { display: none; }
+    .alat strong { font-size: 18px; color: var(--p700); }
+    .alat span { font-size: 14px; color: var(--abu); }
 
     .baris { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; min-height: 30px; }
     .chip { padding: 5px 12px; font-size: 13px; font-weight: 600; border-radius: 999px; }
     #jumlah { color: var(--p700); background: var(--p100); }
     #antrean { color: var(--kuning); background: var(--kuning-bg); }
     #antrean[hidden], #btnFoto[hidden] { display: none; }
-    #btnFoto { margin-left: auto; padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--p700); background: #fff; border: 1.5px solid var(--p500); border-radius: 999px; }
+    .kecil { padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--p700); background: #fff; border: 1.5px solid var(--p500); border-radius: 999px; }
+    #btnMode { margin-left: auto; }
     #pesan { min-height: 20px; margin: 8px 0 0; font-size: 14px; text-align: center; }
     #pesan.err { color: var(--merah); }
     #pesan.ok { color: var(--hijau); }
@@ -60,6 +68,7 @@
     /* Daftar hasil */
     h2 { margin: 0 0 6px; font-size: 15px; color: var(--p900); }
     #kosong { margin: 0; font-size: 14px; color: var(--abu); }
+    #kosong[hidden] { display: none; }
     #daftar { margin: 0; padding: 0; list-style: none; }
     #daftar li { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-top: 8px; padding: 11px 12px; background: var(--p50); border-left: 4px solid var(--garis); border-radius: 12px; }
     #daftar li.ok { border-left-color: var(--hijau); }
@@ -74,16 +83,18 @@
     .lencana.tidak, .lencana.gagal { color: #9f1239; background: var(--merah-bg); }
     .lencana.proses, .lencana.antre { color: var(--p700); background: var(--p100); }
 
-    /* Pop-up izin kamera */
+    /* Pop-up pilihan mode */
     .modal { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(6, 43, 42, .6); }
     .modal[hidden] { display: none; }
     .kotak { width: 100%; max-width: 420px; padding: 22px; background: #fff; border-radius: 22px; }
     .kotak h3 { margin: 0 0 8px; font-size: 19px; color: var(--p900); }
     .kotak p { margin: 0 0 14px; font-size: 15px; line-height: 1.5; }
-    .kotak button { display: block; width: 100%; margin-top: 8px; padding: 13px; font-size: 16px; font-weight: 600; border-radius: 14px; border: 1.5px solid transparent; }
-    #mIzin { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); }
-    #mFoto { color: var(--p700); background: #fff; border-color: var(--p500); }
-    #mTutup { color: var(--abu); background: transparent; }
+    .kotak p.galat { color: var(--merah); }
+    .kotak button { display: block; width: 100%; margin-top: 8px; padding: 13px; font-size: 16px; font-weight: 600; color: var(--p700); background: #fff; border: 1.5px solid var(--p500); border-radius: 14px; }
+    .kotak button small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--abu); }
+    .kotak button.terakhir { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); border-color: transparent; }
+    .kotak button.terakhir small { color: rgba(255, 255, 255, .85); }
+    #mTutup { color: var(--abu); background: transparent; border-color: transparent; font-weight: 500; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -105,10 +116,15 @@
       <div id="pesanKamera">Ketuk di sini untuk mengaktifkan kamera</div>
       <div class="garis"></div>
     </div>
+    <div id="panelAlat" class="alat" hidden>
+      <strong>Alat scanner siap</strong>
+      <span>Sambungkan kabel USB, lalu langsung scan barcode.</span>
+    </div>
     <div class="baris">
       <span class="chip" id="jumlah">0 discan</span>
       <span class="chip" id="antrean" hidden></span>
-      <button type="button" id="btnFoto" hidden>Foto barcode</button>
+      <button type="button" class="kecil" id="btnFoto" hidden>Foto barcode</button>
+      <button type="button" class="kecil" id="btnMode">Ganti mode</button>
       <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
     </div>
     <p id="pesan" role="status" aria-live="polite"></p>
@@ -128,13 +144,14 @@
   </section>
 </main>
 
-<div id="modalKamera" class="modal" role="dialog" aria-modal="true" aria-labelledby="mJudul" hidden>
+<div id="modalMode" class="modal" role="dialog" aria-modal="true" aria-labelledby="mJudul" hidden>
   <div class="kotak">
-    <h3 id="mJudul">Izinkan akses kamera</h3>
-    <p id="mTeks">Kamera dipakai untuk memindai barcode. Tekan Izinkan kamera, lalu pilih Izinkan pada pop-up browser.</p>
-    <button type="button" id="mIzin">Izinkan kamera</button>
-    <button type="button" id="mFoto">Pakai foto barcode</button>
-    <button type="button" id="mTutup">Ketik manual saja</button>
+    <h3 id="mJudul">Pilih cara scan</h3>
+    <p id="mTeks">Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti mode.</p>
+    <button type="button" id="mKamera">Kamera<small>Pindai barcode lewat kamera HP atau laptop</small></button>
+    <button type="button" id="mAlat">Alat scanner USB<small>Sambungkan kabel, lalu scan langsung</small></button>
+    <button type="button" id="mKetik">Ketik manual<small>Ketik nomor DO sendiri</small></button>
+    <button type="button" id="mTutup">Tutup</button>
   </div>
 </div>
 
@@ -144,6 +161,7 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbx4DdrYO1wRmy1kkA8oGRrYfMVUvRrGizkAgfR06MZ7i-5mAMUNHN1yKJQBTlDvxMxCFQ/exec';
 
   const $ = (id) => document.getElementById(id);
+  const TEKS_MODAL = 'Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti mode.';
   let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, status, ket}
   let scanner = null, scannerJalan = false;
   let kodeTerakhir = '', waktuTerakhir = 0;
@@ -255,7 +273,7 @@
     sedangBilas = false;
   }
 
-  // Bunyi pendek dan kedipan bingkai kamera: tanda scan masuk, langsung arahkan ke barcode berikutnya
+  // Bunyi pendek dan kedipan bingkai: tanda scan masuk, langsung arahkan ke barcode berikutnya
   let audio = null;
   function tandaScan() {
     if (navigator.vibrate) navigator.vibrate(80);
@@ -267,8 +285,9 @@
       o.connect(g); g.connect(audio.destination);
       o.start(); o.stop(audio.currentTime + 0.08);
     } catch (e) {}
-    $('kamera').classList.add('kedip');
-    setTimeout(() => $('kamera').classList.remove('kedip'), 250);
+    const el = $('kamera').hidden ? $('panelAlat') : $('kamera');
+    el.classList.add('kedip');
+    setTimeout(() => el.classList.remove('kedip'), 250);
   }
 
   // ---- Memproses nomor DO ----
@@ -306,48 +325,106 @@
   }
 
   function mulaiScanner() {
-    if (!window.Html5Qrcode) { $('pesanKamera').textContent = 'Library scanner gagal dimuat. Periksa koneksi internet.'; return; }
+    if (!window.Html5Qrcode) { $('pesanKamera').hidden = false; $('pesanKamera').textContent = 'Library scanner gagal dimuat. Periksa koneksi internet.'; return; }
     buatScanner().start({ facingMode: 'environment' },
       { fps: 15, qrbox: (w, h) => ({ width: Math.floor(w * 0.92), height: Math.max(60, Math.floor(h * 0.8)) }) },
       proses, () => {})
       .then(() => { scannerJalan = true; $('pesanKamera').hidden = true; $('kamera').classList.add('aktif'); })
       .catch((err) => {
+        $('pesanKamera').hidden = false;
         $('pesanKamera').textContent = 'Kamera langsung tidak bisa diakses (' + String(err) + '). Gunakan Foto barcode atau ketik nomor.';
         $('btnFoto').hidden = false;
-        bukaModal(pesanError(err));
+        bukaModal(pesanError(err), true);
       });
   }
 
-  const bukaModal = (teks) => { if (teks) $('mTeks').textContent = teks; $('modalKamera').hidden = false; $('mIzin').focus(); };
-  const tutupModal = () => { $('modalKamera').hidden = true; };
+  function hentikanScanner() {
+    if (!scannerJalan || !scanner) return;
+    scannerJalan = false;
+    scanner.stop().then(() => {
+      $('kamera').classList.remove('aktif');
+      $('pesanKamera').hidden = false;
+      $('pesanKamera').textContent = 'Ketuk di sini untuk mengaktifkan kamera';
+    }).catch(() => {});
+  }
 
   function pesanError(err) {
     const s = ((err && err.name) || '') + ' ' + String(err && err.message ? err.message : err);
     const kode = (err && err.name) || String(err);
-    if (/NotAllowed|Permission/i.test(s)) return 'Izin kamera ditolak atau diblokir (' + kode + '). Ketuk ikon di kiri alamat URL > Izin > Kamera > Izinkan, muat ulang halaman, lalu coba lagi. Jika tidak ada pilihan izin, gunakan Pakai foto barcode.';
-    if (/NotFound|Requested device not found/i.test(s)) return 'Kamera tidak ditemukan di perangkat ini (' + kode + ').';
+    if (/NotAllowed|Permission/i.test(s)) return 'Izin kamera ditolak atau diblokir (' + kode + '). Ketuk ikon di kiri alamat URL > Izin > Kamera > Izinkan, muat ulang halaman, lalu coba lagi. Atau pilih Alat scanner USB / Ketik manual.';
+    if (/NotFound|Requested device not found/i.test(s)) return 'Kamera tidak ditemukan di perangkat ini (' + kode + '). Pilih Alat scanner USB atau Ketik manual.';
     if (/NotReadable|TrackStart/i.test(s)) return 'Kamera sedang dipakai aplikasi lain (' + kode + '). Tutup aplikasi itu lalu coba lagi.';
-    return 'Kamera gagal dibuka (' + kode + '). Gunakan Pakai foto barcode atau ketik nomor manual.';
+    return 'Kamera gagal dibuka (' + kode + '). Pilih Alat scanner USB atau Ketik manual.';
   }
 
-  $('mIzin').addEventListener('click', async () => {
+  // ---- Mode: kamera, alat scanner USB, ketik manual ----
+  let mode = bacaLokal('mode');   // 'kamera' | 'alat' | 'ketik' | ''
+
+  function setMode(m, simpan) {
+    mode = m;
+    if (simpan) simpanLokal('mode', m);
+    $('kamera').hidden = m !== 'kamera';
+    $('panelAlat').hidden = m !== 'alat';
+    if (m !== 'kamera') hentikanScanner();
+    pesan('');
+    if (m === 'ketik') $('manual').focus();
+    else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  const bukaModal = (teks, galat) => {
+    $('mTeks').textContent = teks || TEKS_MODAL;
+    $('mTeks').className = galat ? 'galat' : '';
+    ['mKamera', 'mAlat', 'mKetik'].forEach((id) => $(id).classList.toggle('terakhir', id === { kamera: 'mKamera', alat: 'mAlat', ketik: 'mKetik' }[mode]));
+    $('modalMode').hidden = false;
+    $('mKamera').focus();
+  };
+  const tutupModal = () => { $('modalMode').hidden = true; };
+
+  // Pilihan 1: Kamera. Dipanggil dari ketukan tombol, sehingga browser boleh menampilkan pop-up izin
+  $('mKamera').addEventListener('click', async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      bukaModal('Browser ini tidak mengizinkan akses kamera langsung. Gunakan Pakai foto barcode.');
       $('btnFoto').hidden = false;
-      return;
+      return bukaModal('Browser ini tidak mengizinkan akses kamera langsung (perlu HTTPS). Pilih Alat scanner USB atau Ketik manual, atau pakai tombol Foto barcode.', true);
     }
     try {
-      // Dipanggil dari ketukan tombol, sehingga browser boleh menampilkan pop-up izin
       (await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })).getTracks().forEach((t) => t.stop());
-      tutupModal();
-      mulaiScanner();
-    } catch (err) { $('btnFoto').hidden = false; bukaModal(pesanError(err)); }
+    } catch (err) { $('btnFoto').hidden = false; return bukaModal(pesanError(err), true); }
+    tutupModal();
+    setMode('kamera', true);     // tampilkan area kamera dulu, baru mulai
+    mulaiScanner();
   });
-  $('mFoto').addEventListener('click', () => { tutupModal(); $('btnFoto').hidden = false; $('fileFoto').click(); });
-  $('mTutup').addEventListener('click', () => { tutupModal(); $('btnFoto').hidden = false; });
+
+  // Pilihan 2: Alat scanner USB
+  $('mAlat').addEventListener('click', () => { tutupModal(); setMode('alat', true); pesan('Alat scanner siap. Arahkan ke barcode dan tekan pemicu.', 'ok'); });
+
+  // Pilihan 3: Ketik manual
+  $('mKetik').addEventListener('click', () => { tutupModal(); setMode('ketik', true); });
+
+  $('mTutup').addEventListener('click', tutupModal);
+  $('btnMode').addEventListener('click', () => bukaModal());
   $('kamera').addEventListener('click', () => { if (!scannerJalan) bukaModal(); });
 
-  // Cadangan: foto barcode lewat aplikasi kamera bawaan HP
+  // ---- Alat scanner USB (bekerja seperti keyboard: ketik cepat lalu Enter) ----
+  // Ditangkap di mana saja, tanpa perlu klik kolom input. Kalau terdeteksi dari mode lain, mode otomatis pindah ke alat.
+  let buf = '', tMulai = 0, tBuf = 0;
+  document.addEventListener('keydown', (e) => {
+    if (e.target === $('manual') || e.ctrlKey || e.metaKey || e.altKey) return;   // kolom input ditangani form di atas
+    const now = Date.now();
+    if (now - tBuf > 150) { buf = ''; tMulai = now; }   // jeda panjang = ketikan manusia
+    tBuf = now;
+    if (e.key === 'Enter') {
+      const rata = buf.length ? (now - tMulai) / buf.length : 999;
+      if (buf.length >= 6 && rata < 60) {               // cepat = alat, bukan manusia
+        e.preventDefault();                              // juga mencegah Enter menekan tombol yang sedang fokus
+        tutupModal();
+        if (mode !== 'alat') setMode('alat', true);
+        proses(buf);
+      }
+      buf = '';
+    } else if (e.key.length === 1) buf += e.key;
+  });
+
+  // ---- Cadangan: foto barcode lewat aplikasi kamera bawaan HP ----
   $('btnFoto').addEventListener('click', () => $('fileFoto').click());
   $('fileFoto').addEventListener('change', (e) => {
     const file = e.target.files && e.target.files[0];
@@ -363,7 +440,7 @@
   window.addEventListener('load', () => {
     render();
     simpanAntrean();
-    bukaModal();
+    bukaModal();       // pop-up pilihan mode selalu tampil saat halaman dibuka
     ambilNama();
     bilasAntrean();
   });
