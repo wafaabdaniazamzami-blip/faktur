@@ -14,7 +14,7 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--teks);
       background: radial-gradient(circle at 100% 0, #d3f5ee 0, transparent 45%), var(--latar); }
-    button { font: inherit; }
+    button { font: inherit; cursor: pointer; }
     button:focus-visible { outline: 3px solid var(--p500); outline-offset: 2px; }
 
     header { padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 76px; color: #fff; border-radius: 0 0 32px 32px;
@@ -25,6 +25,24 @@
     header p { margin: 2px 0 0; font-size: 14px; opacity: .9; }
     main { max-width: 480px; margin: -52px auto 0; padding: 0 14px 32px; }
     .kartu { margin-bottom: 14px; padding: 14px; background: #fff; border-radius: 20px; box-shadow: 0 8px 24px rgba(6, 78, 75, .10); }
+
+    /* Pilihan tahap: Storeman / POD */
+    .tahap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; background: var(--p50); border: 1.5px solid var(--garis); border-radius: 16px; }
+    .tahap button { padding: 10px 8px; font-size: 15px; font-weight: 700; color: var(--abu); background: transparent; border: 0; border-radius: 12px; }
+    .tahap button small { display: block; font-size: 11px; font-weight: 400; opacity: .85; }
+    .tahap button[aria-pressed="true"] { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); }
+
+    /* Ceklist kelengkapan POD */
+    #panelCek { margin-top: 12px; }
+    #panelCek[hidden] { display: none; }
+    .cekgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .cek { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; font-size: 13px; font-weight: 600; line-height: 1.25; text-align: center; color: var(--abu); background: #fff; border: 1.5px solid var(--garis); border-radius: 14px; }
+    .cek i { display: grid; place-items: center; width: 28px; height: 28px; font-style: normal; font-size: 17px; color: transparent; border: 2px solid var(--garis); border-radius: 9px; }
+    .cek[aria-pressed="true"] { color: var(--p900); background: var(--p100); border-color: var(--p500); }
+    .cek[aria-pressed="true"] i { color: #fff; background: var(--p700); border-color: var(--p700); }
+    .cekbaris { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--abu); }
+    .cekbaris label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .catatan { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--abu); }
 
     /* Kamera */
     #kamera { position: relative; height: 150px; overflow: hidden; background: #062b2a; border-radius: 16px; cursor: pointer; }
@@ -54,7 +72,7 @@
     #antrean { color: var(--kuning); background: var(--kuning-bg); }
     #antrean[hidden], #btnFoto[hidden] { display: none; }
     .kecil { padding: 6px 14px; font-size: 13px; font-weight: 600; color: var(--p700); background: #fff; border: 1.5px solid var(--p500); border-radius: 999px; }
-    #btnMode { margin-left: auto; }
+    #btnCara { margin-left: auto; }
     #pesan { min-height: 20px; margin: 8px 0 0; font-size: 14px; text-align: center; }
     #pesan.err { color: var(--merah); }
     #pesan.ok { color: var(--hijau); }
@@ -72,18 +90,19 @@
     #daftar { margin: 0; padding: 0; list-style: none; }
     #daftar li { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-top: 8px; padding: 11px 12px; background: var(--p50); border-left: 4px solid var(--garis); border-radius: 12px; }
     #daftar li.ok { border-left-color: var(--hijau); }
-    #daftar li.sudah { border-left-color: #f59e0b; }
+    #daftar li.sudah, #daftar li.kurang { border-left-color: #f59e0b; }
     #daftar li.tidak, #daftar li.gagal { border-left-color: var(--merah); }
     #daftar li.proses, #daftar li.antre { border-left-color: var(--p500); }
     .kode { font-weight: 600; letter-spacing: .3px; word-break: break-all; }
+    .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--p700); background: var(--p100); border-radius: 999px; vertical-align: 1px; }
     .ket { margin-top: 2px; font-size: 13px; color: var(--abu); }
     .lencana { flex: none; padding: 3px 10px; font-size: 12px; font-weight: 700; border-radius: 999px; }
     .lencana.ok { color: #166534; background: #dcfce7; }
-    .lencana.sudah { color: var(--kuning); background: var(--kuning-bg); }
+    .lencana.sudah, .lencana.kurang { color: var(--kuning); background: var(--kuning-bg); }
     .lencana.tidak, .lencana.gagal { color: #9f1239; background: var(--merah-bg); }
     .lencana.proses, .lencana.antre { color: var(--p700); background: var(--p100); }
 
-    /* Pop-up pilihan mode */
+    /* Pop-up pilihan cara scan */
     .modal { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(6, 43, 42, .6); }
     .modal[hidden] { display: none; }
     .kotak { width: 100%; max-width: 420px; padding: 22px; background: #fff; border-radius: 22px; }
@@ -105,11 +124,30 @@
     </div>
     <div>
       <h1>Scanner DO</h1>
-      <p>Scan barcode nomor DO, penerimaan tercatat otomatis.</p>
+      <p>Scan barcode nomor DO, serah terima dan POD tercatat otomatis.</p>
     </div>
   </div>
 </header>
 <main>
+  <section class="kartu">
+    <div class="tahap" role="group" aria-label="Tahap scan">
+      <button type="button" id="tStore" aria-pressed="true">Storeman<small>Absolute</small></button>
+      <button type="button" id="tPod" aria-pressed="false">POD<small>Proof Of Delivery</small></button>
+    </div>
+    <div id="panelCek" hidden>
+      <div class="cekgrid">
+        <button type="button" class="cek" data-k="faktur" aria-pressed="false"><i aria-hidden="true">✓</i>Faktur DOTS</button>
+        <button type="button" class="cek" data-k="sj" aria-pressed="false"><i aria-hidden="true">✓</i>Surat Jalan</button>
+        <button type="button" class="cek" data-k="ttd" aria-pressed="false"><i aria-hidden="true">✓</i>TTD &amp; Stempel</button>
+      </div>
+      <div class="cekbaris">
+        <button type="button" class="kecil" id="cekSemua">Lengkap semua</button>
+        <label><input type="checkbox" id="pertahankan"> Pertahankan centang</label>
+      </div>
+      <p class="catatan">Centang dokumen yang ada, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan POD dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
+    </div>
+  </section>
+
   <section class="kartu">
     <div id="kamera">
       <div id="reader"></div>
@@ -124,7 +162,7 @@
       <span class="chip" id="jumlah">0 discan</span>
       <span class="chip" id="antrean" hidden></span>
       <button type="button" class="kecil" id="btnFoto" hidden>Foto barcode</button>
-      <button type="button" class="kecil" id="btnMode">Ganti mode</button>
+      <button type="button" class="kecil" id="btnCara">Ganti cara scan</button>
       <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
     </div>
     <p id="pesan" role="status" aria-live="polite"></p>
@@ -144,10 +182,10 @@
   </section>
 </main>
 
-<div id="modalMode" class="modal" role="dialog" aria-modal="true" aria-labelledby="mJudul" hidden>
+<div id="modalCara" class="modal" role="dialog" aria-modal="true" aria-labelledby="mJudul" hidden>
   <div class="kotak">
     <h3 id="mJudul">Pilih cara scan</h3>
-    <p id="mTeks">Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti mode.</p>
+    <p id="mTeks">Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti cara scan.</p>
     <button type="button" id="mKamera">Kamera<small>Pindai barcode lewat kamera HP atau laptop</small></button>
     <button type="button" id="mAlat">Alat scanner USB<small>Sambungkan kabel, lalu scan langsung</small></button>
     <button type="button" id="mKetik">Ketik manual<small>Ketik nomor DO sendiri</small></button>
@@ -161,10 +199,11 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbx4DdrYO1wRmy1kkA8oGRrYfMVUvRrGizkAgfR06MZ7i-5mAMUNHN1yKJQBTlDvxMxCFQ/exec';
 
   const $ = (id) => document.getElementById(id);
-  const TEKS_MODAL = 'Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti mode.';
-  let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, status, ket}
+  const TEKS_MODAL = 'Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti cara scan.';
+  const NAMA_TAHAP = { storeman: 'Storeman', pod: 'POD' };
+  let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, tahap, status, ket}
   let scanner = null, scannerJalan = false;
-  let kodeTerakhir = '', waktuTerakhir = 0;
+  let kunciTerakhir = '', waktuTerakhir = 0;
 
   // ---- Penyimpanan lokal dan nama petugas ----
   const simpanLokal = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
@@ -192,10 +231,36 @@
     } finally { clearTimeout(timer); }
   }
 
+  // ---- Tahap (Storeman / POD) dan ceklist kelengkapan POD ----
+  let tahap = ['storeman', 'pod'].includes(bacaLokal('tahap')) ? bacaLokal('tahap') : 'storeman';
+  const kosongCek = () => ({ faktur: false, sj: false, ttd: false });
+  let cek = kosongCek();
+  let pertahankan = bacaLokal('pertahankan') === '1';
+
+  function setTahap(t, simpan) {
+    tahap = t;
+    if (simpan) simpanLokal('tahap', t);
+    $('tStore').setAttribute('aria-pressed', String(t === 'storeman'));
+    $('tPod').setAttribute('aria-pressed', String(t === 'pod'));
+    $('panelCek').hidden = t !== 'pod';
+    pesan('');
+  }
+  function renderCek() {
+    document.querySelectorAll('.cek').forEach((b) => b.setAttribute('aria-pressed', String(cek[b.dataset.k])));
+  }
+  $('tStore').addEventListener('click', () => setTahap('storeman', true));
+  $('tPod').addEventListener('click', () => setTahap('pod', true));
+  document.querySelectorAll('.cek').forEach((b) => b.addEventListener('click', () => { cek[b.dataset.k] = !cek[b.dataset.k]; renderCek(); }));
+  $('cekSemua').addEventListener('click', () => { cek = { faktur: true, sj: true, ttd: true }; renderCek(); });
+  $('pertahankan').addEventListener('change', (e) => { pertahankan = e.target.checked; simpanLokal('pertahankan', pertahankan ? '1' : '0'); });
+
   // ---- Tampilan ----
   function pesan(teks, jenis) { $('pesan').textContent = teks || ''; $('pesan').className = jenis || ''; }
 
-  const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
+  const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', kurang: 'Belum lengkap', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
+  const labelStatus = (d) => (d.status === 'ok' && d.tahap === 'pod') ? 'Lengkap' : (d.status === 'sudah' && d.tahap === 'pod') ? 'Sudah lengkap' : LABEL[d.status];
+  const sama = (t, k) => (d) => (d.tahap || 'storeman') === t && d.kode.toUpperCase() === k.toUpperCase();
+
   function render() {
     $('kosong').hidden = daftar.length > 0;
     $('jumlah').textContent = daftar.length + ' discan';
@@ -204,9 +269,11 @@
       li.className = d.status;
       const kiri = document.createElement('div');
       const kode = document.createElement('div'); kode.className = 'kode'; kode.textContent = d.kode;
+      const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = NAMA_TAHAP[d.tahap || 'storeman'];
+      kode.append(tag);
       kiri.append(kode);
       if (d.ket) { const k = document.createElement('div'); k.className = 'ket'; k.textContent = d.ket; kiri.append(k); }
-      const l = document.createElement('span'); l.className = 'lencana ' + d.status; l.textContent = LABEL[d.status];
+      const l = document.createElement('span'); l.className = 'lencana ' + d.status; l.textContent = labelStatus(d);
       li.append(kiri, l);
       return li;
     }));
@@ -215,10 +282,18 @@
   // Menerjemahkan hasil dari server ke tampilan
   function terapkan(item, h) {
     if (!h) { item.status = 'gagal'; item.ket = 'Tidak ada jawaban dari server.'; return; }
+    const pod = (h.tahap || item.tahap) === 'pod';
     item.status = h.status;
-    item.ket = h.status === 'ok' ? (h.baris > 1 ? h.baris + ' baris diperbarui' : 'Tanggal penerimaan tercatat')
-      : h.status === 'sudah' ? 'Oleh ' + h.user + ', ' + h.waktu
-      : 'Nomor ini tidak ada di kolom NO DOCUMENT';
+    if (h.status === 'ok') {
+      item.ket = pod ? (h.baris > 1 ? 'Lengkap, POD tercentang di ' + h.baris + ' baris' : 'Lengkap, POD tercentang')
+        : (h.baris > 1 ? h.baris + ' baris diperbarui' : 'Tanggal penerimaan tercatat');
+    } else if (h.status === 'kurang') {
+      item.ket = 'Kurang: ' + (h.kurang || []).join(', ') + '. POD tidak tercentang. Scan ulang setelah dilengkapi.';
+    } else if (h.status === 'sudah') {
+      item.ket = (pod ? 'POD sudah tercentang oleh ' : 'Oleh ') + h.user + ', ' + h.waktu;
+    } else {
+      item.ket = 'Nomor ini tidak ada di kolom NO DOCUMENT';
+    }
   }
 
   // ---- Pengiriman dan antrean offline ----
@@ -233,7 +308,7 @@
 
   function tandaiAntre(paket, ket) {
     paket.forEach((p) => {
-      const d = daftar.find((x) => x.kode.toUpperCase() === p.kode.toUpperCase());
+      const d = daftar.find(sama(p.tahap || 'storeman', p.kode));
       if (d && d.status === 'proses') { d.status = 'antre'; d.ket = ket; }
     });
     render();
@@ -259,8 +334,9 @@
         antrean = antrean.slice(paket.length);
         simpanAntrean();
         res.hasil.forEach((h) => {
-          let item = daftar.find((d) => d.kode.toUpperCase() === h.kode.toUpperCase());
-          if (!item) { item = { kode: h.kode }; daftar.unshift(item); }
+          const t = h.tahap || 'storeman';
+          let item = daftar.find(sama(t, h.kode));
+          if (!item) { item = { kode: h.kode, tahap: t }; daftar.unshift(item); }
           terapkan(item, h);
         });
         render();
@@ -295,17 +371,27 @@
     const kode = String(teks).trim();
     if (!kode) return;
     const sekarang = Date.now();
-    if (kode === kodeTerakhir && sekarang - waktuTerakhir < 3000) return;   // barcode yang sama masih di depan kamera
-    kodeTerakhir = kode; waktuTerakhir = sekarang;
+    const kunci = tahap + '|' + kode.toUpperCase();
+    if (kunci === kunciTerakhir && sekarang - waktuTerakhir < 3000) return;   // barcode yang sama masih di depan kamera
+    kunciTerakhir = kunci; waktuTerakhir = sekarang;
 
-    if (daftar.some((d) => d.kode.toUpperCase() === kode.toUpperCase())) return pesan(kode + ' sudah discan pada sesi ini.', 'err');
+    // Nomor yang sudah discan pada tahap yang sama ditolak, kecuali POD yang belum lengkap (boleh discan ulang)
+    const ada = daftar.find(sama(tahap, kode));
+    if (ada && ada.status !== 'kurang') return pesan(kode + ' sudah discan (' + NAMA_TAHAP[tahap] + ') pada sesi ini.', 'err');
+    if (ada) daftar.splice(daftar.indexOf(ada), 1);
+
     tandaScan();
     pesan('');
-    daftar.unshift({ kode: kode, status: 'proses', ket: '' });
+    daftar.unshift({ kode: kode, tahap: tahap, status: 'proses', ket: '' });
     render();
-    antrean.push({ kode: kode, waktu: sekarang });
+
+    const butir = { kode: kode, waktu: sekarang, tahap: tahap };
+    if (tahap === 'pod') butir.cek = Object.assign({}, cek);   // kelengkapan dokumen saat scan
+    antrean.push(butir);
     simpanAntrean();
     bilasAntrean();
+
+    if (tahap === 'pod' && !pertahankan) { cek = kosongCek(); renderCek(); }   // centang kembali kosong untuk dokumen berikutnya
   }
 
   $('formManual').addEventListener('submit', (e) => {
@@ -357,12 +443,12 @@
     return 'Kamera gagal dibuka (' + kode + '). Pilih Alat scanner USB atau Ketik manual.';
   }
 
-  // ---- Mode: kamera, alat scanner USB, ketik manual ----
-  let mode = bacaLokal('mode');   // 'kamera' | 'alat' | 'ketik' | ''
+  // ---- Cara scan: kamera, alat scanner USB, ketik manual ----
+  let cara = bacaLokal('cara');   // 'kamera' | 'alat' | 'ketik' | ''
 
-  function setMode(m, simpan) {
-    mode = m;
-    if (simpan) simpanLokal('mode', m);
+  function setCara(m, simpan) {
+    cara = m;
+    if (simpan) simpanLokal('cara', m);
     $('kamera').hidden = m !== 'kamera';
     $('panelAlat').hidden = m !== 'alat';
     if (m !== 'kamera') hentikanScanner();
@@ -374,11 +460,12 @@
   const bukaModal = (teks, galat) => {
     $('mTeks').textContent = teks || TEKS_MODAL;
     $('mTeks').className = galat ? 'galat' : '';
-    ['mKamera', 'mAlat', 'mKetik'].forEach((id) => $(id).classList.toggle('terakhir', id === { kamera: 'mKamera', alat: 'mAlat', ketik: 'mKetik' }[mode]));
-    $('modalMode').hidden = false;
+    const terakhir = { kamera: 'mKamera', alat: 'mAlat', ketik: 'mKetik' }[cara];
+    ['mKamera', 'mAlat', 'mKetik'].forEach((id) => $(id).classList.toggle('terakhir', id === terakhir));
+    $('modalCara').hidden = false;
     $('mKamera').focus();
   };
-  const tutupModal = () => { $('modalMode').hidden = true; };
+  const tutupModal = () => { $('modalCara').hidden = true; };
 
   // Pilihan 1: Kamera. Dipanggil dari ketukan tombol, sehingga browser boleh menampilkan pop-up izin
   $('mKamera').addEventListener('click', async () => {
@@ -390,22 +477,22 @@
       (await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })).getTracks().forEach((t) => t.stop());
     } catch (err) { $('btnFoto').hidden = false; return bukaModal(pesanError(err), true); }
     tutupModal();
-    setMode('kamera', true);     // tampilkan area kamera dulu, baru mulai
+    setCara('kamera', true);     // tampilkan area kamera dulu, baru mulai
     mulaiScanner();
   });
 
   // Pilihan 2: Alat scanner USB
-  $('mAlat').addEventListener('click', () => { tutupModal(); setMode('alat', true); pesan('Alat scanner siap. Arahkan ke barcode dan tekan pemicu.', 'ok'); });
+  $('mAlat').addEventListener('click', () => { tutupModal(); setCara('alat', true); pesan('Alat scanner siap. Arahkan ke barcode dan tekan pemicu.', 'ok'); });
 
   // Pilihan 3: Ketik manual
-  $('mKetik').addEventListener('click', () => { tutupModal(); setMode('ketik', true); });
+  $('mKetik').addEventListener('click', () => { tutupModal(); setCara('ketik', true); });
 
   $('mTutup').addEventListener('click', tutupModal);
-  $('btnMode').addEventListener('click', () => bukaModal());
+  $('btnCara').addEventListener('click', () => bukaModal());
   $('kamera').addEventListener('click', () => { if (!scannerJalan) bukaModal(); });
 
   // ---- Alat scanner USB (bekerja seperti keyboard: ketik cepat lalu Enter) ----
-  // Ditangkap di mana saja, tanpa perlu klik kolom input. Kalau terdeteksi dari mode lain, mode otomatis pindah ke alat.
+  // Ditangkap di mana saja, tanpa perlu klik kolom input. Kalau terdeteksi dari cara lain, cara otomatis pindah ke alat.
   let buf = '', tMulai = 0, tBuf = 0;
   document.addEventListener('keydown', (e) => {
     if (e.target === $('manual') || e.ctrlKey || e.metaKey || e.altKey) return;   // kolom input ditangani form di atas
@@ -417,7 +504,7 @@
       if (buf.length >= 6 && rata < 60) {               // cepat = alat, bukan manusia
         e.preventDefault();                              // juga mencegah Enter menekan tombol yang sedang fokus
         tutupModal();
-        if (mode !== 'alat') setMode('alat', true);
+        if (cara !== 'alat') setCara('alat', true);
         proses(buf);
       }
       buf = '';
@@ -432,7 +519,7 @@
     if (!file || !window.Html5Qrcode) return;
     pesan('Membaca foto...');
     buatScanner().scanFile(file, false)
-      .then((teks) => { kodeTerakhir = ''; proses(teks); })
+      .then((teks) => { kunciTerakhir = ''; proses(teks); })
       .catch(() => pesan('Barcode tidak terbaca. Foto lebih dekat, tegak lurus, dan pastikan barcode utuh serta fokus.', 'err'));
   });
 
@@ -440,7 +527,10 @@
   window.addEventListener('load', () => {
     render();
     simpanAntrean();
-    bukaModal();       // pop-up pilihan mode selalu tampil saat halaman dibuka
+    setTahap(tahap);
+    renderCek();
+    $('pertahankan').checked = pertahankan;
+    bukaModal();       // pop-up pilihan cara scan selalu tampil saat halaman dibuka
     ambilNama();
     bilasAntrean();
   });
