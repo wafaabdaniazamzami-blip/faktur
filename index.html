@@ -26,16 +26,17 @@
     main { max-width: 480px; margin: -52px auto 0; padding: 0 14px 32px; }
     .kartu { margin-bottom: 14px; padding: 14px; background: #fff; border-radius: 20px; box-shadow: 0 8px 24px rgba(6, 78, 75, .10); }
 
-    /* Pilihan tahap: Storeman / POD */
+    /* Pilihan tahap (slide) */
     .tahap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; background: var(--p50); border: 1.5px solid var(--garis); border-radius: 16px; }
     .tahap button { padding: 10px 8px; font-size: 15px; font-weight: 700; color: var(--abu); background: transparent; border: 0; border-radius: 12px; }
     .tahap button small { display: block; font-size: 11px; font-weight: 400; opacity: .85; }
     .tahap button[aria-pressed="true"] { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); }
-
-    /* Ceklist kelengkapan POD */
     #panelCek { margin-top: 12px; }
     #panelCek[hidden] { display: none; }
-    .cekgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--p700); background: var(--p100); border-radius: 999px; vertical-align: 1px; }
+
+    /* Ceklist kelengkapan POD */
+    .cekgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .cek { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; font-size: 13px; font-weight: 600; line-height: 1.25; text-align: center; color: var(--abu); background: #fff; border: 1.5px solid var(--garis); border-radius: 14px; }
     .cek i { display: grid; place-items: center; width: 28px; height: 28px; font-style: normal; font-size: 17px; color: transparent; border: 2px solid var(--garis); border-radius: 9px; }
     .cek[aria-pressed="true"] { color: var(--p900); background: var(--p100); border-color: var(--p500); }
@@ -94,7 +95,6 @@
     #daftar li.tidak, #daftar li.gagal { border-left-color: var(--merah); }
     #daftar li.proses, #daftar li.antre { border-left-color: var(--p500); }
     .kode { font-weight: 600; letter-spacing: .3px; word-break: break-all; }
-    .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--p700); background: var(--p100); border-radius: 999px; vertical-align: 1px; }
     .ket { margin-top: 2px; font-size: 13px; color: var(--abu); }
     .lencana { flex: none; padding: 3px 10px; font-size: 12px; font-weight: 700; border-radius: 999px; }
     .lencana.ok { color: #166534; background: #dcfce7; }
@@ -124,19 +124,18 @@
     </div>
     <div>
       <h1>Scanner DO</h1>
-      <p>Scan barcode nomor DO, serah terima dan POD tercatat otomatis.</p>
+      <p>Scan barcode nomor DO, penerimaan dan POD tercatat otomatis.</p>
     </div>
   </div>
 </header>
 <main>
   <section class="kartu">
     <div class="tahap" role="group" aria-label="Tahap scan">
-      <button type="button" id="tStore" aria-pressed="true">Storeman<small>Absolute</small></button>
-      <button type="button" id="tPod" aria-pressed="false">POD<small>Proof Of Delivery</small></button>
+      <button type="button" id="tStore" aria-pressed="true">Storeman<small>Terima (G, H, I)</small></button>
+      <button type="button" id="tAbs" aria-pressed="false">Absolute<small>Surat Jalan &amp; TTD (K-O)</small></button>
     </div>
     <div id="panelCek" hidden>
       <div class="cekgrid">
-        <button type="button" class="cek" data-k="faktur" aria-pressed="false"><i aria-hidden="true">✓</i>Faktur DOTS</button>
         <button type="button" class="cek" data-k="sj" aria-pressed="false"><i aria-hidden="true">✓</i>Surat Jalan</button>
         <button type="button" class="cek" data-k="ttd" aria-pressed="false"><i aria-hidden="true">✓</i>TTD &amp; Stempel</button>
       </div>
@@ -144,7 +143,7 @@
         <button type="button" class="kecil" id="cekSemua">Lengkap semua</button>
         <label><input type="checkbox" id="pertahankan"> Pertahankan centang</label>
       </div>
-      <p class="catatan">Centang dokumen yang ada, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan POD dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
+      <p class="catatan">Centang dokumen yang ada, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
     </div>
   </section>
 
@@ -200,8 +199,7 @@
 
   const $ = (id) => document.getElementById(id);
   const TEKS_MODAL = 'Pilih salah satu. Pilihan bisa diganti kapan saja lewat tombol Ganti cara scan.';
-  const NAMA_TAHAP = { storeman: 'Storeman', pod: 'POD' };
-  let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, tahap, status, ket}
+  let daftar = [];          // hasil scan sesi ini, terbaru di atas: {kode, status, ket}
   let scanner = null, scannerJalan = false;
   let kunciTerakhir = '', waktuTerakhir = 0;
 
@@ -231,34 +229,36 @@
     } finally { clearTimeout(timer); }
   }
 
-  // ---- Tahap (Storeman / POD) dan ceklist kelengkapan POD ----
-  let tahap = ['storeman', 'pod'].includes(bacaLokal('tahap')) ? bacaLokal('tahap') : 'storeman';
-  const kosongCek = () => ({ faktur: false, sj: false, ttd: false });
-  let cek = kosongCek();
-  let pertahankan = bacaLokal('pertahankan') === '1';
-
+  // ---- Ceklist kelengkapan: Surat Jalan dan TTD & Stempel ----
+  const NAMA_TAHAP = { storeman: 'Storeman', absolute: 'Absolute' };
+  let tahap = ['storeman', 'absolute'].includes(bacaLokal('tahap')) ? bacaLokal('tahap') : 'storeman';
   function setTahap(t, simpan) {
     tahap = t;
     if (simpan) simpanLokal('tahap', t);
     $('tStore').setAttribute('aria-pressed', String(t === 'storeman'));
-    $('tPod').setAttribute('aria-pressed', String(t === 'pod'));
-    $('panelCek').hidden = t !== 'pod';
+    $('tAbs').setAttribute('aria-pressed', String(t === 'absolute'));
+    $('panelCek').hidden = t !== 'absolute';
     pesan('');
   }
+  $('tStore').addEventListener('click', () => setTahap('storeman', true));
+  $('tAbs').addEventListener('click', () => setTahap('absolute', true));
+
+  const kosongCek = () => ({ sj: false, ttd: false });
+  let cek = kosongCek();
+  let pertahankan = bacaLokal('pertahankan') === '1';
+
   function renderCek() {
     document.querySelectorAll('.cek').forEach((b) => b.setAttribute('aria-pressed', String(cek[b.dataset.k])));
   }
-  $('tStore').addEventListener('click', () => setTahap('storeman', true));
-  $('tPod').addEventListener('click', () => setTahap('pod', true));
   document.querySelectorAll('.cek').forEach((b) => b.addEventListener('click', () => { cek[b.dataset.k] = !cek[b.dataset.k]; renderCek(); }));
-  $('cekSemua').addEventListener('click', () => { cek = { faktur: true, sj: true, ttd: true }; renderCek(); });
+  $('cekSemua').addEventListener('click', () => { cek = { sj: true, ttd: true }; renderCek(); });
   $('pertahankan').addEventListener('change', (e) => { pertahankan = e.target.checked; simpanLokal('pertahankan', pertahankan ? '1' : '0'); });
 
   // ---- Tampilan ----
   function pesan(teks, jenis) { $('pesan').textContent = teks || ''; $('pesan').className = jenis || ''; }
 
   const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', kurang: 'Belum lengkap', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
-  const labelStatus = (d) => (d.status === 'ok' && d.tahap === 'pod') ? 'Lengkap' : (d.status === 'sudah' && d.tahap === 'pod') ? 'Sudah lengkap' : LABEL[d.status];
+  const labelStatus = (d) => (d.status === 'ok' && d.tahap === 'absolute') ? 'Lengkap' : (d.status === 'sudah' && d.tahap === 'absolute') ? 'Sudah lengkap' : LABEL[d.status];
   const sama = (t, k) => (d) => (d.tahap || 'storeman') === t && d.kode.toUpperCase() === k.toUpperCase();
 
   function render() {
@@ -282,15 +282,15 @@
   // Menerjemahkan hasil dari server ke tampilan
   function terapkan(item, h) {
     if (!h) { item.status = 'gagal'; item.ket = 'Tidak ada jawaban dari server.'; return; }
-    const pod = (h.tahap || item.tahap) === 'pod';
+    const abs = (h.tahap || item.tahap) === 'absolute';
     item.status = h.status;
     if (h.status === 'ok') {
-      item.ket = pod ? (h.baris > 1 ? 'Lengkap, POD tercentang di ' + h.baris + ' baris' : 'Lengkap, POD tercentang')
+      item.ket = abs ? (h.baris > 1 ? 'Lengkap, POD tercentang di ' + h.baris + ' baris' : 'Lengkap, POD tercentang')
         : (h.baris > 1 ? h.baris + ' baris diperbarui' : 'Tanggal penerimaan tercatat');
     } else if (h.status === 'kurang') {
       item.ket = 'Kurang: ' + (h.kurang || []).join(', ') + '. POD tidak tercentang. Scan ulang setelah dilengkapi.';
     } else if (h.status === 'sudah') {
-      item.ket = (pod ? 'POD sudah tercentang oleh ' : 'Oleh ') + h.user + ', ' + h.waktu;
+      item.ket = (abs ? 'Sudah lengkap, oleh ' : 'Oleh ') + h.user + ', ' + h.waktu;
     } else {
       item.ket = 'Nomor ini tidak ada di kolom NO DOCUMENT';
     }
@@ -375,7 +375,7 @@
     if (kunci === kunciTerakhir && sekarang - waktuTerakhir < 3000) return;   // barcode yang sama masih di depan kamera
     kunciTerakhir = kunci; waktuTerakhir = sekarang;
 
-    // Nomor yang sudah discan pada tahap yang sama ditolak, kecuali POD yang belum lengkap (boleh discan ulang)
+    // Nomor yang sudah discan ditolak, kecuali yang belum lengkap (boleh discan ulang)
     const ada = daftar.find(sama(tahap, kode));
     if (ada && ada.status !== 'kurang') return pesan(kode + ' sudah discan (' + NAMA_TAHAP[tahap] + ') pada sesi ini.', 'err');
     if (ada) daftar.splice(daftar.indexOf(ada), 1);
@@ -386,12 +386,12 @@
     render();
 
     const butir = { kode: kode, waktu: sekarang, tahap: tahap };
-    if (tahap === 'pod') butir.cek = Object.assign({}, cek);   // kelengkapan dokumen saat scan
+    if (tahap === 'absolute') butir.cek = Object.assign({}, cek);   // kelengkapan dokumen saat scan
     antrean.push(butir);
     simpanAntrean();
     bilasAntrean();
 
-    if (tahap === 'pod' && !pertahankan) { cek = kosongCek(); renderCek(); }   // centang kembali kosong untuk dokumen berikutnya
+    if (tahap === 'absolute' && !pertahankan) { cek = kosongCek(); renderCek(); }   // centang kembali kosong untuk dokumen berikutnya
   }
 
   $('formManual').addEventListener('submit', (e) => {
