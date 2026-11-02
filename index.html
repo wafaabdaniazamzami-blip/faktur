@@ -27,12 +27,12 @@
     .kartu { margin-bottom: 14px; padding: 14px; background: #fff; border-radius: 20px; box-shadow: 0 8px 24px rgba(6, 78, 75, .10); }
 
     /* Pilihan tahap (slide) */
-    .tahap { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 4px; background: var(--p50); border: 1.5px solid var(--garis); border-radius: 16px; }
-    .tahap button { padding: 10px 8px; font-size: 15px; font-weight: 700; color: var(--abu); background: transparent; border: 0; border-radius: 12px; }
+    .tahap { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px; background: var(--p50); border: 1.5px solid var(--garis); border-radius: 16px; }
+    .tahap button { padding: 10px 4px; font-size: 14px; font-weight: 700; color: var(--abu); background: transparent; border: 0; border-radius: 12px; }
     .tahap button small { display: block; font-size: 11px; font-weight: 400; opacity: .85; }
     .tahap button[aria-pressed="true"] { color: #fff; background: linear-gradient(135deg, var(--p700), var(--p500)); }
-    #panelCek { margin-top: 12px; }
-    #panelCek[hidden] { display: none; }
+    #panelCek, #panelBilling { margin-top: 12px; }
+    #panelCek[hidden], #panelBilling[hidden] { display: none; }
     .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--p700); background: var(--p100); border-radius: 999px; vertical-align: 1px; }
 
     /* Ceklist kelengkapan POD */
@@ -44,6 +44,14 @@
     .cekbaris { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--abu); }
     .cekbaris label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .catatan { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: var(--abu); }
+
+    /* Released Billing: tanggal dan kategori */
+    .tgl { display: block; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: var(--abu); }
+    .tgl input { display: block; width: 100%; margin-top: 4px; padding: 12px 14px; font: inherit; font-size: 16px; color: var(--teks); background: var(--p50); border: 1.5px solid var(--garis); border-radius: 14px; }
+    .tgl input:focus { outline: none; background: #fff; border-color: var(--p500); box-shadow: 0 0 0 3px rgba(20, 184, 166, .25); }
+    .katgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kat { padding: 14px 6px; font-size: 15px; font-weight: 700; color: var(--abu); background: #fff; border: 1.5px solid var(--garis); border-radius: 14px; }
+    .kat[aria-pressed="true"] { color: var(--p900); background: var(--p100); border-color: var(--p500); box-shadow: inset 0 0 0 1px var(--p500); }
 
     /* Kamera */
     #kamera { position: relative; height: 150px; overflow: hidden; background: #062b2a; border-radius: 16px; cursor: pointer; }
@@ -91,14 +99,14 @@
     #daftar { margin: 0; padding: 0; list-style: none; }
     #daftar li { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; margin-top: 8px; padding: 11px 12px; background: var(--p50); border-left: 4px solid var(--garis); border-radius: 12px; }
     #daftar li.ok { border-left-color: var(--hijau); }
-    #daftar li.sudah, #daftar li.kurang { border-left-color: #f59e0b; }
+    #daftar li.sudah, #daftar li.kurang, #daftar li.periksa { border-left-color: #f59e0b; }
     #daftar li.tidak, #daftar li.gagal { border-left-color: var(--merah); }
     #daftar li.proses, #daftar li.antre { border-left-color: var(--p500); }
     .kode { font-weight: 600; letter-spacing: .3px; word-break: break-all; }
     .ket { margin-top: 2px; font-size: 13px; color: var(--abu); }
     .lencana { flex: none; padding: 3px 10px; font-size: 12px; font-weight: 700; border-radius: 999px; }
     .lencana.ok { color: #166534; background: #dcfce7; }
-    .lencana.sudah, .lencana.kurang { color: var(--kuning); background: var(--kuning-bg); }
+    .lencana.sudah, .lencana.kurang, .lencana.periksa { color: var(--kuning); background: var(--kuning-bg); }
     .lencana.tidak, .lencana.gagal { color: #9f1239; background: var(--merah-bg); }
     .lencana.proses, .lencana.antre { color: var(--p700); background: var(--p100); }
 
@@ -124,15 +132,16 @@
     </div>
     <div>
       <h1>Scanner DO</h1>
-      <p>Scan barcode nomor DO, penerimaan dan POD tercatat otomatis.</p>
+      <p>Scan barcode nomor DO, penerimaan, POD, dan released billing tercatat otomatis.</p>
     </div>
   </div>
 </header>
 <main>
   <section class="kartu">
     <div class="tahap" role="group" aria-label="Tahap scan">
-      <button type="button" id="tStore" aria-pressed="true">Storeman<small>Terima (G, H, I)</small></button>
-      <button type="button" id="tAbs" aria-pressed="false">Absolute<small>Surat Jalan &amp; TTD (K-O)</small></button>
+      <button type="button" id="tStore" aria-pressed="true">Storeman<small>Terima</small></button>
+      <button type="button" id="tAbs" aria-pressed="false">Absolute<small>SJ &amp; TTD</small></button>
+      <button type="button" id="tBill" aria-pressed="false">Billing<small>Released</small></button>
     </div>
     <div id="panelCek" hidden>
       <div class="cekgrid">
@@ -144,6 +153,18 @@
         <label><input type="checkbox" id="pertahankan"> Pertahankan centang</label>
       </div>
       <p class="catatan">Centang dokumen yang ada, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
+    </div>
+    <div id="panelBilling" hidden>
+      <label class="tgl">Tanggal
+        <input type="date" id="tanggal" autocomplete="off">
+      </label>
+      <div class="katgrid" role="group" aria-label="Kategori">
+        <button type="button" class="kat" data-v="Kredit" aria-pressed="false">Kredit</button>
+        <button type="button" class="kat" data-v="COD 1.5%" aria-pressed="false">COD 1.5%</button>
+        <button type="button" class="kat" data-v="Batal COD" aria-pressed="false">Batal COD</button>
+        <button type="button" class="kat" data-v="COD" aria-pressed="false">COD</button>
+      </div>
+      <p class="catatan">Pilih tanggal dan kategori dulu, lalu scan. Setiap scan menambah satu baris di sheet Released Billing memakai pilihan ini, sampai Anda menggantinya. Nomor Billing (kolom E) tidak diisi oleh scanner.</p>
     </div>
   </section>
 
@@ -229,20 +250,24 @@
     } finally { clearTimeout(timer); }
   }
 
-  // ---- Ceklist kelengkapan: Surat Jalan dan TTD & Stempel ----
-  const NAMA_TAHAP = { storeman: 'Storeman', absolute: 'Absolute' };
-  let tahap = ['storeman', 'absolute'].includes(bacaLokal('tahap')) ? bacaLokal('tahap') : 'storeman';
+  // ---- Tahap scan: storeman, absolute, billing ----
+  const NAMA_TAHAP = { storeman: 'Storeman', absolute: 'Absolute', billing: 'Billing' };
+  let tahap = ['storeman', 'absolute', 'billing'].includes(bacaLokal('tahap')) ? bacaLokal('tahap') : 'storeman';
   function setTahap(t, simpan) {
     tahap = t;
     if (simpan) simpanLokal('tahap', t);
     $('tStore').setAttribute('aria-pressed', String(t === 'storeman'));
     $('tAbs').setAttribute('aria-pressed', String(t === 'absolute'));
+    $('tBill').setAttribute('aria-pressed', String(t === 'billing'));
     $('panelCek').hidden = t !== 'absolute';
+    $('panelBilling').hidden = t !== 'billing';
     pesan('');
   }
   $('tStore').addEventListener('click', () => setTahap('storeman', true));
   $('tAbs').addEventListener('click', () => setTahap('absolute', true));
+  $('tBill').addEventListener('click', () => setTahap('billing', true));
 
+  // ---- Ceklist kelengkapan: Surat Jalan dan TTD & Stempel ----
   const kosongCek = () => ({ sj: false, ttd: false });
   let cek = kosongCek();
   let pertahankan = bacaLokal('pertahankan') === '1';
@@ -254,11 +279,26 @@
   $('cekSemua').addEventListener('click', () => { cek = { sj: true, ttd: true }; renderCek(); });
   $('pertahankan').addEventListener('change', (e) => { pertahankan = e.target.checked; simpanLokal('pertahankan', pertahankan ? '1' : '0'); });
 
+  // ---- Released Billing: tanggal dan kategori ----
+  // Sengaja tidak disimpan antar sesi: tanggal yang basi akan salah tercatat tanpa terlihat.
+  let kategori = '';
+  const fmtTgl = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; };
+  document.querySelectorAll('.kat').forEach((b) => b.addEventListener('click', () => {
+    kategori = b.dataset.v;
+    document.querySelectorAll('.kat').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    pesan('');
+  }));
+  // Setelah memilih tanggal, lepaskan fokus supaya ketikan alat scanner USB tidak mengubah tanggal
+  $('tanggal').addEventListener('change', () => { $('tanggal').blur(); pesan(''); });
+
   // ---- Tampilan ----
   function pesan(teks, jenis) { $('pesan').textContent = teks || ''; $('pesan').className = jenis || ''; }
 
-  const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', kurang: 'Belum lengkap', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
-  const labelStatus = (d) => (d.status === 'ok' && d.tahap === 'absolute') ? 'Lengkap' : (d.status === 'sudah' && d.tahap === 'absolute') ? 'Sudah lengkap' : LABEL[d.status];
+  const LABEL = { proses: 'Memproses', ok: 'Diterima', sudah: 'Sudah diterima', kurang: 'Belum lengkap', periksa: 'Periksa', tidak: 'Tidak ditemukan', antre: 'Menunggu kirim', gagal: 'Gagal' };
+  const labelStatus = (d) => {
+    if (d.tahap === 'billing') return d.status === 'ok' ? 'Tercatat' : d.status === 'sudah' ? 'Sudah tercatat' : LABEL[d.status];
+    return (d.status === 'ok' && d.tahap === 'absolute') ? 'Lengkap' : (d.status === 'sudah' && d.tahap === 'absolute') ? 'Sudah lengkap' : LABEL[d.status];
+  };
   const sama = (t, k) => (d) => (d.tahap || 'storeman') === t && d.kode.toUpperCase() === k.toUpperCase();
 
   function render() {
@@ -282,8 +322,19 @@
   // Menerjemahkan hasil dari server ke tampilan
   function terapkan(item, h) {
     if (!h) { item.status = 'gagal'; item.ket = 'Tidak ada jawaban dari server.'; return; }
-    const abs = (h.tahap || item.tahap) === 'absolute';
+    const t = h.tahap || item.tahap;
     item.status = h.status;
+
+    if (t === 'billing') {
+      const info = (h.kategori || '') + (h.tanggal ? ', ' + h.tanggal : '');
+      if (h.status === 'ok') item.ket = info;
+      else if (h.status === 'periksa') item.ket = info + '. Tersimpan, tetapi nomor ini tidak ada di Master Data. Periksa kembali nomornya.';
+      else if (h.status === 'sudah') item.ket = 'Sudah tercatat: ' + info + (h.user ? ', oleh ' + h.user : '');
+      else item.ket = h.pesan || 'Data tidak valid.';
+      return;
+    }
+
+    const abs = t === 'absolute';
     if (h.status === 'ok') {
       item.ket = abs ? (h.baris > 1 ? 'Lengkap, POD tercentang di ' + h.baris + ' baris' : 'Lengkap, POD tercentang')
         : (h.baris > 1 ? h.baris + ' baris diperbarui' : 'Tanggal penerimaan tercatat');
@@ -317,36 +368,47 @@
     if (!timerUlang) timerUlang = setTimeout(() => { timerUlang = null; bilasAntrean(); }, 8000);
   }
 
+  // Kirim satu kelompok ke satu aksi. Berhasil: kelompok keluar dari antrean. Gagal: tetap di antrean.
+  async function kirimGrup(grup, aksi) {
+    if (!grup.length) return true;
+    try {
+      const res = await api(aksi, { items: grup });
+      if (!res || !res.ok) {
+        tandaiAntre(grup, (res && res.message) || 'Gagal memproses, dicoba lagi otomatis.');
+        return false;
+      }
+      antrean = antrean.filter((x) => !grup.includes(x));
+      simpanAntrean();
+      (res.hasil || []).forEach((h) => {
+        const t = h.tahap || 'storeman';
+        let item = daftar.find(sama(t, h.kode));
+        if (!item) { item = { kode: h.kode, tahap: t }; daftar.unshift(item); }
+        terapkan(item, h);
+      });
+      render();
+      return true;
+    } catch (e) {
+      tandaiAntre(grup, 'Tidak ada sinyal. Dikirim otomatis nanti.');
+      return false;
+    }
+  }
+
   // Semua scan masuk antrean. Hanya satu pengiriman berjalan sekaligus, dan setiap pengiriman
   // membawa semua scan yang menumpuk, jadi scan berikutnya tidak perlu menunggu hasil sebelumnya.
+  // Storeman/Absolute dikirim lewat aksi 'terima', Billing lewat aksi 'billing' (dua kelompok yang berdiri sendiri,
+  // jadi satu kelompok yang gagal tidak menahan yang lain).
   async function bilasAntrean() {
     if (sedangBilas) return;
     sedangBilas = true;
-    while (antrean.length) {
-      const paket = antrean.slice(0, 25);
-      try {
-        const res = await api('terima', { items: paket });
-        if (!res || !res.ok) {
-          tandaiAntre(paket, (res && res.message) || 'Gagal memproses, dicoba lagi otomatis.');
-          jadwalUlang();
-          break;
-        }
-        antrean = antrean.slice(paket.length);
-        simpanAntrean();
-        res.hasil.forEach((h) => {
-          const t = h.tahap || 'storeman';
-          let item = daftar.find(sama(t, h.kode));
-          if (!item) { item = { kode: h.kode, tahap: t }; daftar.unshift(item); }
-          terapkan(item, h);
-        });
-        render();
-      } catch (e) {
-        tandaiAntre(paket, 'Tidak ada sinyal. Dikirim otomatis nanti.');
-        jadwalUlang();
-        break;
+    try {
+      while (antrean.length) {
+        const master = antrean.filter((x) => x.tahap !== 'billing').slice(0, 25);
+        const bill = antrean.filter((x) => x.tahap === 'billing').slice(0, 25);
+        const a = await kirimGrup(master, 'terima');
+        const b = await kirimGrup(bill, 'billing');
+        if (!a || !b) { jadwalUlang(); break; }
       }
-    }
-    sedangBilas = false;
+    } finally { sedangBilas = false; }
   }
 
   // Bunyi pendek dan kedipan bingkai: tanda scan masuk, langsung arahkan ke barcode berikutnya
@@ -370,6 +432,16 @@
   function proses(teks) {
     const kode = String(teks).trim();
     if (!kode) return;
+
+    // Billing: tanggal dan kategori wajib dipilih dulu. Nilainya diambil saat scan, bukan saat antrean terkirim.
+    let tanggalIso = '', kat = '';
+    if (tahap === 'billing') {
+      tanggalIso = $('tanggal').value;
+      kat = kategori;
+      if (!tanggalIso) return pesan('Pilih tanggal dulu sebelum scan Billing.', 'err');
+      if (!kat) return pesan('Pilih kategori dulu sebelum scan Billing.', 'err');
+    }
+
     const sekarang = Date.now();
     const kunci = tahap + '|' + kode.toUpperCase();
     if (kunci === kunciTerakhir && sekarang - waktuTerakhir < 3000) return;   // barcode yang sama masih di depan kamera
@@ -382,11 +454,12 @@
 
     tandaScan();
     pesan('');
-    daftar.unshift({ kode: kode, tahap: tahap, status: 'proses', ket: '' });
+    daftar.unshift({ kode: kode, tahap: tahap, status: 'proses', ket: tahap === 'billing' ? kat + ', ' + fmtTgl(tanggalIso) : '' });
     render();
 
     const butir = { kode: kode, waktu: sekarang, tahap: tahap };
     if (tahap === 'absolute') butir.cek = Object.assign({}, cek);   // kelengkapan dokumen saat scan
+    if (tahap === 'billing') { butir.tanggal = tanggalIso; butir.kategori = kat; }
     antrean.push(butir);
     simpanAntrean();
     bilasAntrean();
@@ -496,6 +569,8 @@
   let buf = '', tMulai = 0, tBuf = 0;
   document.addEventListener('keydown', (e) => {
     if (e.target === $('manual') || e.ctrlKey || e.metaKey || e.altKey) return;   // kolom input ditangani form di atas
+    // Kolom tanggal: cegah huruf/angka dari alat scanner mengubah tanggal yang sudah dipilih (kalender tetap bisa dipakai)
+    if (e.target === $('tanggal') && e.key.length === 1) e.preventDefault();
     const now = Date.now();
     if (now - tBuf > 150) { buf = ''; tMulai = now; }   // jeda panjang = ketikan manusia
     tBuf = now;
