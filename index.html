@@ -39,6 +39,7 @@
     .cekgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .cek { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; font-size: 13px; font-weight: 600; line-height: 1.25; text-align: center; color: var(--abu); background: #fff; border: 1.5px solid var(--garis); border-radius: 14px; }
     .cek i { display: grid; place-items: center; width: 28px; height: 28px; font-style: normal; font-size: 17px; color: transparent; border: 2px solid var(--garis); border-radius: 9px; }
+    .cek small { font-size: 11px; font-weight: 400; opacity: .8; }
     .cek[aria-pressed="true"] { color: var(--p900); background: var(--p100); border-color: var(--p500); }
     .cek[aria-pressed="true"] i { color: #fff; background: var(--p700); border-color: var(--p700); }
     .cekbaris { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--abu); }
@@ -145,14 +146,14 @@
     </div>
     <div id="panelCek" hidden>
       <div class="cekgrid">
-        <button type="button" class="cek" data-k="sj" aria-pressed="false"><i aria-hidden="true">✓</i>Surat Jalan</button>
-        <button type="button" class="cek" data-k="ttd" aria-pressed="false"><i aria-hidden="true">✓</i>TTD &amp; Stempel</button>
+        <button type="button" class="cek" data-k="sj" aria-pressed="false"><i aria-hidden="true">✓</i>Surat Jalan<small>tekan 1</small></button>
+        <button type="button" class="cek" data-k="ttd" aria-pressed="false"><i aria-hidden="true">✓</i>TTD &amp; Stempel<small>tekan 2</small></button>
       </div>
       <div class="cekbaris">
-        <button type="button" class="kecil" id="cekSemua">Lengkap semua</button>
+        <button type="button" class="kecil" id="cekSemua">Lengkap semua (3)</button>
         <label><input type="checkbox" id="pertahankan"> Pertahankan centang</label>
       </div>
-      <p class="catatan">Centang dokumen yang ada, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
+      <p class="catatan">Pintasan keyboard: 1 = hanya Surat Jalan, 2 = hanya TTD &amp; Stempel, 3 = keduanya lengkap. Atau ketuk tombolnya. Pilih dulu, lalu scan. Kalau ada yang kurang, otomatis tertulis di Keterangan dan kolom POD tidak tercentang. Scan ulang nomor itu setelah dilengkapi.</p>
     </div>
     <div id="panelBilling" hidden>
       <label class="tgl">Tanggal
@@ -182,6 +183,7 @@
       <span class="chip" id="jumlah">0 discan</span>
       <span class="chip" id="antrean" hidden></span>
       <button type="button" class="kecil" id="btnFoto" hidden>Foto barcode</button>
+      <button type="button" class="kecil" id="btnSuara">Suara: nyala</button>
       <button type="button" class="kecil" id="btnCara">Ganti cara scan</button>
       <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
     </div>
@@ -277,6 +279,9 @@
   }
   document.querySelectorAll('.cek').forEach((b) => b.addEventListener('click', () => { cek[b.dataset.k] = !cek[b.dataset.k]; renderCek(); }));
   $('cekSemua').addEventListener('click', () => { cek = { sj: true, ttd: true }; renderCek(); });
+  // Pintasan keyboard tahap Absolute (angka atas maupun numpad): 1 = Surat Jalan, 2 = TTD & Stempel, 3 = keduanya
+  const PINTAS = { '1': { sj: true, ttd: false }, '2': { sj: false, ttd: true }, '3': { sj: true, ttd: true } };
+  let timerPintas = null;
   $('pertahankan').addEventListener('change', (e) => { pertahankan = e.target.checked; simpanLokal('pertahankan', pertahankan ? '1' : '0'); });
 
   // ---- Released Billing: tanggal dan kategori ----
@@ -386,6 +391,7 @@
         terapkan(item, h);
       });
       render();
+      bunyiHasil(res.hasil);
       return true;
     } catch (e) {
       tandaiAntre(grup, 'Tidak ada sinyal. Dikirim otomatis nanti.');
@@ -411,18 +417,73 @@
     } finally { sedangBilas = false; }
   }
 
-  // Bunyi pendek dan kedipan bingkai: tanda scan masuk, langsung arahkan ke barcode berikutnya
+  // ---- Suara ----
+  // Browser hanya mengizinkan suara setelah ada ketukan/tombol dari pengguna, jadi audio "dibuka" pada interaksi pertama.
+  // Tanpa ini, scan lewat kamera bisa senyap karena tidak ada interaksi tepat sebelum bunyi.
+  let suaraNyala = bacaLokal('suara') !== '0';
   let audio = null;
-  function tandaScan() {
-    if (navigator.vibrate) navigator.vibrate(80);
+  function siapAudio() {
     try {
       audio = audio || new (window.AudioContext || window.webkitAudioContext)();
       if (audio.state === 'suspended') audio.resume();
-      const o = audio.createOscillator(), g = audio.createGain();
-      o.frequency.value = 880; g.gain.value = 0.08;
-      o.connect(g); g.connect(audio.destination);
-      o.start(); o.stop(audio.currentTime + 0.08);
     } catch (e) {}
+  }
+  ['pointerdown', 'touchstart', 'keydown'].forEach((ev) => document.addEventListener(ev, siapAudio, { passive: true }));
+
+  // Tiap nada: [frekuensi Hz, mulai (detik), durasi (detik), bentuk gelombang]
+  const SUARA = {
+    scan:      [[1100, 0, 0.09, 'square']],                                  // barcode terbaca
+    sukses:    [[660, 0, 0.10, 'sine'], [990, 0.11, 0.16, 'sine']],          // tersimpan di sheet (naik)
+    peringatan:[[520, 0, 0.12, 'triangle'], [520, 0.17, 0.12, 'triangle']],  // tersimpan tetapi perlu perhatian / sudah ada
+    galat:     [[220, 0, 0.32, 'sawtooth']]                                  // ditolak atau gagal
+  };
+  function bunyi(nama) {
+    if (!suaraNyala) return;
+    siapAudio();
+    if (!audio) return;
+    try {
+      const t0 = audio.currentTime;
+      SUARA[nama].forEach((n) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        const a = t0 + n[1];
+        o.type = n[3]; o.frequency.value = n[0];
+        g.gain.setValueAtTime(0.0001, a);
+        g.gain.exponentialRampToValueAtTime(0.3, a + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, a + n[2]);
+        o.connect(g); g.connect(audio.destination);
+        o.start(a); o.stop(a + n[2] + 0.03);
+      });
+    } catch (e) {}
+  }
+  // Satu bunyi per kiriman: yang terburuk menang (galat > peringatan > sukses)
+  function bunyiHasil(hasil) {
+    const st = (hasil || []).map((h) => h.status);
+    if (!st.length) return;
+    if (st.some((s) => s === 'tidak' || s === 'gagal')) bunyi('galat');
+    else if (st.some((s) => s === 'sudah' || s === 'kurang' || s === 'periksa')) bunyi('peringatan');
+    else bunyi('sukses');
+  }
+  function setSuara(nyala) {
+    suaraNyala = nyala;
+    simpanLokal('suara', nyala ? '1' : '0');
+    $('btnSuara').textContent = nyala ? 'Suara: nyala' : 'Suara: mati';
+    if (nyala) bunyi('scan');
+  }
+  $('btnSuara').addEventListener('click', () => setSuara(!suaraNyala));
+
+  // Penolakan lokal (duplikat, tanggal/kategori kosong): bunyi galat hanya sekali per nomor,
+  // supaya barcode yang masih di depan kamera tidak membunyikan alarm tiap 3 detik.
+  let galatKunci = '', galatWaktu = 0;
+  function tolak(teks, kunci) {
+    pesan(teks, 'err');
+    const n = Date.now();
+    if (kunci !== galatKunci || n - galatWaktu > 10000) { bunyi('galat'); galatKunci = kunci; galatWaktu = n; }
+  }
+
+  // Bunyi pendek dan kedipan bingkai: tanda scan masuk, langsung arahkan ke barcode berikutnya
+  function tandaScan() {
+    if (navigator.vibrate) navigator.vibrate(80);
+    bunyi('scan');
     const el = $('kamera').hidden ? $('panelAlat') : $('kamera');
     el.classList.add('kedip');
     setTimeout(() => el.classList.remove('kedip'), 250);
@@ -438,8 +499,8 @@
     if (tahap === 'billing') {
       tanggalIso = $('tanggal').value;
       kat = kategori;
-      if (!tanggalIso) return pesan('Pilih tanggal dulu sebelum scan Billing.', 'err');
-      if (!kat) return pesan('Pilih kategori dulu sebelum scan Billing.', 'err');
+      if (!tanggalIso) return tolak('Pilih tanggal dulu sebelum scan Billing.', 'pilihan');
+      if (!kat) return tolak('Pilih kategori dulu sebelum scan Billing.', 'pilihan');
     }
 
     const sekarang = Date.now();
@@ -449,7 +510,7 @@
 
     // Nomor yang sudah discan ditolak, kecuali yang belum lengkap (boleh discan ulang)
     const ada = daftar.find(sama(tahap, kode));
-    if (ada && ada.status !== 'kurang') return pesan(kode + ' sudah discan (' + NAMA_TAHAP[tahap] + ') pada sesi ini.', 'err');
+    if (ada && ada.status !== 'kurang') return tolak(kode + ' sudah discan (' + NAMA_TAHAP[tahap] + ') pada sesi ini.', kunci);
     if (ada) daftar.splice(daftar.indexOf(ada), 1);
 
     tandaScan();
@@ -572,7 +633,15 @@
     // Kolom tanggal: cegah huruf/angka dari alat scanner mengubah tanggal yang sudah dipilih (kalender tetap bisa dipakai)
     if (e.target === $('tanggal') && e.key.length === 1) e.preventDefault();
     const now = Date.now();
-    if (now - tBuf > 150) { buf = ''; tMulai = now; }   // jeda panjang = ketikan manusia
+    const jeda = now - tBuf;
+    // Pintasan 1/2/3 hanya berlaku untuk tekanan tunggal. Angka di dalam barcode dari alat scanner datang beruntun
+    // (jeda pendek sebelum dan sesudahnya), jadi ditunda sebentar dan dibatalkan kalau ada tombol lain menyusul.
+    clearTimeout(timerPintas);
+    if (tahap === 'absolute' && $('modalCara').hidden && jeda > 150 && PINTAS[e.key]) {
+      const pilih = PINTAS[e.key];
+      timerPintas = setTimeout(() => { cek = Object.assign({}, pilih); renderCek(); }, 160);
+    }
+    if (jeda > 150) { buf = ''; tMulai = now; }   // jeda panjang = ketikan manusia
     tBuf = now;
     if (e.key === 'Enter') {
       const rata = buf.length ? (now - tMulai) / buf.length : 999;
@@ -605,6 +674,7 @@
     setTahap(tahap);
     renderCek();
     $('pertahankan').checked = pertahankan;
+    $('btnSuara').textContent = suaraNyala ? 'Suara: nyala' : 'Suara: mati';
     bukaModal();       // pop-up pilihan cara scan selalu tampil saat halaman dibuka
     ambilNama();
     bilasAntrean();
